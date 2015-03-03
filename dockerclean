@@ -1,0 +1,5 @@
+#!/bin/bash -x
+
+docker ps -aq | xargs -n 1 -x docker stop \
+&& docker ps -aq | xargs -n 1 -x docker rm \
+&& docker images -q --filter dangling=true | xargs -n 1 -x docker rmi

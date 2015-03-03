@@ -1,0 +1,50 @@
+#!/bin/bash
+
+help="Usage: $0 [with-docker|perl-only]"
+
+[[ -z $@ ]] && echo "$help" && exit 1
+
+cmd=$1; shift;
+
+if [ "$cmd" == "with-docker" ]; then
+    if [ "`uname`" == "Darwin" ] && [ "`boot2docker status`" != "running" ]; then
+        boot2docker start
+        $(boot2docker shellinit)
+    fi
+
+    EXECUTABLE=docrocis.sh;
+    echo "Building Docker image"
+    ./dockerbuild
+    [[ "$?" != "0" ]] && echo "[ERROR] Could not build Docker image. Abort." && exit 1
+elif [ "$cmd" == "perl-only" ]; then
+    EXECUTABLE=ocrocis.sh;
+else
+    echo "$help" && exit 1;
+fi
+
+echo "Installing Ocrocis ($cmd)"
+
+mkdir -p bin
+ln -sf ../lib/$EXECUTABLE bin/ocrocis
+
+SHELLRC="$HOME/.`basename $SHELL`rc"
+PATHEXTENSION='PATH='`pwd`'/bin:$PATH'
+
+if [ ! -f "$SHELLRC" ]; then
+    echo "[WARNING] Tried to find your shell profile at '$SHELLRC', but it does not seem to exist.";
+    echo "Please add this line to your shell profile:";
+    echo "   export $PATHEXTENSION";
+    echo "Then restart your terminal and enter 'ocrocis' to get started.";
+else
+    num_exports=$(cat $SHELLRC | grep -c "`pwd`/bin")
+    if [ $num_exports -eq 0 ]; then
+        echo "Adding export to $SHELLRC";
+        echo "   export $PATHEXTENSION";
+        echo -e "\nexport $PATHEXTENSION" >> "$SHELLRC"
+    else
+        echo "Skip adding export 'export $PATHEXTENSION' to $SHELLRC (already exists)"
+    fi
+
+    echo "Installation successful. Enter 'ocrocis' to get started.";
+    exec "$SHELL";
+fi

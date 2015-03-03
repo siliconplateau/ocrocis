@@ -1,0 +1,10 @@
+#!/bin/bash -x
+
+# docker build --rm --tag="ocrocis" .
+# cat Dockerfile | perl -pe `echo 's/\\$UID/'$UID'/g'` | docker build --rm --tag="ocrocis" -
+
+HOST_UNAME=`uname`
+HOST_GID=`id -g $(whoami)`
+HOST_UID=`id -u $(whoami)`
+
+cat Dockerfile | perl -pe "`echo 's|\\$PWD|'$PWD'|g; s/\\$HOST_UID/'$HOST_UID'/g; s/\\$HOST_GID/'$HOST_GID'/g; s/\\$HOST_UNAME/'$HOST_UNAME'/g'`" | docker build --rm --tag="ocrocis" -
